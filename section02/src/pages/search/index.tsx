@@ -17,7 +17,7 @@ import { BookData } from "@/types";
 //   return { props: {books} };
 // };
 
-// SSG
+// SSG : 정적 경로에 적용
 // export const getStaticProps = async (
 //   context: GetStaticPropsContext,
 // ) => {
