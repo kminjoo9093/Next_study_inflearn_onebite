@@ -6,6 +6,8 @@ import {
 } from "next";
 import style from "./[id].module.css";
 import fetchOneBook from "@/lib/fetch-one-book";
+import { useRouter } from "next/router";
+import { notFound } from "next/navigation";
 
 const mockData = {
   id: 1,
@@ -37,7 +39,12 @@ export const getStaticPaths = () => {
       { params: { id: "2" } },
       { params: { id: "3" } },
     ],
-    fallback: false, // 존재하지 않는 url로 요청 보냈을 시 대비책
+    // 존재하지 않는 url로 요청 보냈을 시 대비책
+    // false : 404 not found
+    // blocking: SSR 방식
+    // true : SRR 방식 + 데이터가 없는 폴백 상태의 페이지(props 데이터가 없는 상태의 페이지)부터 반환
+    //       props를 보내는 getStaticPaths 함수 호출은 생략하고 컴포넌트만 사전렌더링해서 우선적으로 브라우저에 보내고, 이후 props 데이터 후속으로 보냄
+    fallback: true, 
   };
 };
 
@@ -45,12 +52,22 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   const id = context.params!.id;
   const book = await fetchOneBook(Number(id));
 
+  // 404페이지로 리다이렉트
+  if(!book) {
+    return {
+      notFound: true,
+    }
+  }
+
   return { props: { book } };
 };
 
 export default function Page({
   book,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const router = useRouter();
+
+  if(router.isFallback) return "로딩중입니다";
   if (!book) return "문제가 발생했습니다. 다시 시도하세요";
 
   const { id, title, subTitle, description, author, publisher, coverImgUrl } =
